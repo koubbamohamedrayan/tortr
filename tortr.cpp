@@ -4,7 +4,6 @@
 
 using namespace std;
 
-// check if command exists
 bool exists(string cmd) {
     string check = "which " + cmd + " > /dev/null 2>&1";
     return system(check.c_str()) == 0;
@@ -13,18 +12,34 @@ bool exists(string cmd) {
 int main(int argc, char* argv[]) {
 
     if (argc < 2) {
+        cout << "tortr - universal linux package installer\n";
         cout << "usage:\n";
-        cout << "tortr -ins <package>\n";
-        cout << "tortr -lf <package>\n";
-        cout << "tortr -pu\n";
-        return 1;
+        cout << " tortr install <package>\n";
+        cout << " tortr search <package>\n";
+        cout << " tortr update\n";
+        cout << " tortr setup\n";
+        cout << " tortr help\n";
+        return 0;
     }
 
     string command = argv[1];
-    string package = "";
-    if (argc >= 3) package = argv[2];
 
-    // detect package manager
+    if (command == "help") {
+        cout << "tortr commands:\n";
+        cout << " install <package>\n";
+        cout << " search <package>\n";
+        cout << " update\n";
+        cout << " setup\n";
+        return 0;
+    }
+
+    if (command == "setup") {
+        cout << "Installing tortr to /usr/local/bin...\n";
+        system("sudo cp tortr /usr/local/bin/tortr");
+        cout << "Done.\n";
+        return 0;
+    }
+
     string manager;
 
     if (exists("pacman")) manager = "pacman";
@@ -35,41 +50,50 @@ int main(int argc, char* argv[]) {
 
     cout << "Detected package manager: " << manager << "\n";
 
-    // INSTALL
-    if (command == "-ins") {
+    if (command == "install") {
 
-        if (package == "") {
+        if (argc < 3) {
             cout << "package required\n";
             return 1;
         }
 
+        string package = argv[2];
         int result = 1;
 
         if (manager == "pacman")
-            result = system(("sudo pacman -S " + package).c_str());
+            result = system(("sudo pacman -S --needed " + package).c_str());
 
         else if (manager == "apt")
-            result = system(("sudo apt install " + package).c_str());
+            result = system(("sudo apt install -y " + package).c_str());
 
         else if (manager == "dnf")
-            result = system(("sudo dnf install " + package).c_str());
+            result = system(("sudo dnf install -y " + package).c_str());
 
         else if (manager == "zypper")
             result = system(("sudo zypper install " + package).c_str());
 
         if (result != 0) {
-            cout << "Native install failed, trying flatpak...\n";
-            system(("flatpak install flathub " + package).c_str());
+
+            if (exists("flatpak")) {
+                cout << "Trying flatpak...\n";
+                system(("flatpak install flathub " + package).c_str());
+            }
+
+            else if (exists("snap")) {
+                cout << "Trying snap...\n";
+                system(("sudo snap install " + package).c_str());
+            }
         }
     }
 
-    // SEARCH
-    else if (command == "-lf") {
+    else if (command == "search") {
 
-        if (package == "") {
+        if (argc < 3) {
             cout << "package required\n";
             return 1;
         }
+
+        string package = argv[2];
 
         if (manager == "pacman")
             system(("pacman -Ss " + package).c_str());
@@ -82,13 +106,9 @@ int main(int argc, char* argv[]) {
 
         else if (manager == "zypper")
             system(("zypper search " + package).c_str());
-
-        cout << "Searching flatpak...\n";
-        system(("flatpak search " + package).c_str());
     }
 
-    // UPDATE
-    else if (command == "-pu") {
+    else if (command == "update") {
 
         if (manager == "pacman")
             system("sudo pacman -Syu");
@@ -102,8 +122,11 @@ int main(int argc, char* argv[]) {
         else if (manager == "zypper")
             system("sudo zypper update");
 
-        cout << "Updating flatpaks...\n";
-        system("flatpak update");
+        if (exists("flatpak"))
+            system("flatpak update");
+
+        if (exists("snap"))
+            system("sudo snap refresh");
     }
 
     else {
