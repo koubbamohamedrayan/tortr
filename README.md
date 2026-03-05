@@ -1,35 +1,47 @@
-Tortr
+tortr
 
-Tortr is a simple cross-distro package wrapper for Linux.
+tortr is a small program that installs packages on Linux systems.
+
+It detects the system package manager and runs it automatically.
+If the package is not found, it can try Flatpak or Snap.
+
+Supported managers:
+
+- pacman
+- apt
+- dnf
+- zypper
 
 Build
 
-Compile the program:
+Compile with:
 
 g++ tortr.cpp -o tortr
 
-Install (global command)
+Install
 
-Install it to /usr/local/bin so it can be used like a normal command:
+./tortr setup
 
-sudo g++ tortr.cpp -o /usr/local/bin/tortr
+This installs tortr to "/usr/local/bin".
 
 Usage
 
-Install a package
+Install a package:
 
-tortr -ins <package>
+tortr install <package>
 
-Search for a package
+Search for a package:
 
-tortr -lf <package>
+tortr search <package>
 
-Update the system
+Update system packages:
 
-tortr -pu
+tortr update
 
-Example
+Show help:
 
-tortr -ins firefox
-tortr -lf discord
-tortr -pu
+tortr help
+
+License
+
+GPL
